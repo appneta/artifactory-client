@@ -53,6 +53,50 @@ module Artifactory
       end
 
       #
+      # Search for an artifact using AQL:
+      #
+      # @example Search for all repositories with the given gavc
+      #   Artifact.aql_search(
+      #     group:      'org.acme',
+      #     name:       'artifact',
+      #     version:    '1.0',
+      #     classifier: 'sources',
+      #   )
+      #
+      # @example Search for all artifacts with the given gavc in a specific repo
+      #   Artifact.aql_search(
+      #     group:      'org.acme',
+      #     name:       'artifact',
+      #     version:    '1.0',
+      #     classifier: 'sources',
+      #     repos:      'libs-release-local',
+      #   )
+      #
+      # @param [Hash] options
+      #   the list of options to search with
+      # @option options [Artifactory::Client] :client
+      #   the client object to make the request with
+      # @option options [String] :aql
+      #   an AQL object to search with https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language
+      #
+      # @return [Array<Resource::Artifact>]
+      #   a list of artifacts that match the query
+      #
+      def aql_search(options = {})
+        client = extract_client!(options)
+        params = Util.slice(options, :aql)
+        headers ||= {
+          "Content-Type" => "plain/text",
+        }
+
+        client.post("/api/search/aql", params, headers)["results"].map do |artifact|
+          puts artifact.inspect
+          # /api/storage/libs-properties-local/org/acme/artifact.deb
+          from_url("/api/storage/" + artifact['repo'] + "/" + artifact['path'] + "/" + artifact['name'], client: client)
+        end
+      end
+
+      #
       # Search for an artifact by Maven coordinates: +Group ID+, +Artifact ID+,
       # +Version+ and +Classifier+.
       #

@@ -10,6 +10,31 @@ module Artifactory
         end
       end
 
+      app.post("/api/search/aql") do
+        content_type "application/json"
+        JSON.fast_generate({
+          "results" => [
+            {
+              "repo" => "libs-release-local",
+              "path" => "org/jfrog/artifactory",
+              "name" => "artifactory.war",
+              "type" => "item type",
+              "size" => "75500000",
+              "created" => "2015-01-01T10:10;10",
+              "created_by" => "Jfrog",
+              "modified" => "2015-01-01T10:10;10",
+              "modified_by" => "Jfrog",
+              "updated" => "2015-01-01T10:10;10"
+            },
+          ],
+          "range" => {
+            "start_pos" => 0,
+            "end_pos" => 1,
+            "total" => 1
+          }
+        })
+      end
+
       app.get("/api/search/gavc") do
         content_type "application/vnd.org.jfrog.artifactory.search.GavcSearchResult+json"
         artifacts_for_conditions do
@@ -87,6 +112,32 @@ module Artifactory
           }
         )
       end
+
+      app.get("/api/storage/libs-release-local/org/jfrog/artifactory/artifactory.war") do
+        content_type "application/vnd.org.jfrog.artifactory.storage.FileInfo+json"
+        JSON.fast_generate(
+          "uri"          => server_url.join("/api/storage/libs-release-local/org/acme/artifact.deb"),
+          "downloadUri"  => server_url.join("/artifactory/libs-release-local/org/acme/artifact.deb"),
+          "repo"         => "libs-release-local",
+          "path"         => "/org/jfrog/artifactory/artifactory.war",
+          "created"      => Time.parse("1991-07-23 12:07am"),
+          "createdBy"    => "schisamo",
+          "lastModified" => Time.parse("2013-12-24 11:50pm"),
+          "modifiedBy"   => "sethvargo",
+          "lastUpdated"  => Time.parse("2014-01-01 1:00pm"),
+          "size"         => "1024",
+          "mimeType"     => "application/tgz",
+          "checksums"    => {
+            "md5" => "MD5123",
+            "sha" => "SHA456",
+          },
+          "originalChecksums" => {
+            "md5" => "MD5123",
+            "sha" => "SHA456",
+          }
+        )
+      end
+
 
       app.get("/api/storage/libs-properties-local/org/acme/artifact.deb") do
         content_type "application/vnd.org.jfrog.artifactory.storage.ItemProperties+json"

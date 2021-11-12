@@ -9,6 +9,7 @@ module Artifactory
     before(:each) do
       allow(Artifactory).to receive(:client).and_return(client)
       allow(client).to receive(:get).and_return(response) if defined?(response)
+      allow(client).to receive(:post).and_return(response) if defined?(response)
     end
 
     describe ".search" do
@@ -159,6 +160,19 @@ module Artifactory
         subject.upload_from_archive("libs-release-local", "/remote/path")
       end
 
+    end
+
+    describe ".aql_search" do
+      let(:response) { { "results" => [] } }
+
+      it "calls /api/search/aql" do
+        expect(client).to receive(:post).with("/api/search/aql", {}).once
+        described_class.aql_search
+      end
+
+      it "returns an array of objects" do
+        expect(described_class.aql_search).to be_a(Array)
+      end
     end
 
     describe ".gavc_search" do
