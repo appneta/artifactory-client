@@ -55,21 +55,15 @@ module Artifactory
       #
       # Search for an artifact using AQL:
       #
-      # @example Search for all repositories with the given gavc
+      # @example Search for all artifacts in specific repos with string
       #   Artifact.aql_search(
-      #     group:      'org.acme',
-      #     name:       'artifact',
-      #     version:    '1.0',
-      #     classifier: 'sources',
+      #     aql: "items.find({\"@repo\":{\"$eq\":\"libs-releases-local\"}})"
       #   )
       #
-      # @example Search for all artifacts with the given gavc in a specific repo
+      # @example Search for all artifacts in a specific repos using the builder
+      #   aql_query = AQLBuilder.Artifact.with_repos([repos]).with_properties([environment: dev]).build
       #   Artifact.aql_search(
-      #     group:      'org.acme',
-      #     name:       'artifact',
-      #     version:    '1.0',
-      #     classifier: 'sources',
-      #     repos:      'libs-release-local',
+      #     aql:      aql
       #   )
       #
       # @param [Hash] options
@@ -90,8 +84,6 @@ module Artifactory
         }
 
         client.post("/api/search/aql", params, headers)["results"].map do |artifact|
-          puts artifact.inspect
-          # /api/storage/libs-properties-local/org/acme/artifact.deb
           from_url("/api/storage/" + artifact['repo'] + "/" + artifact['path'] + "/" + artifact['name'], client: client)
         end
       end
