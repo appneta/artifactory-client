@@ -44,14 +44,21 @@ module Artifactory
     class CompoundCriteria
       attr_accessor :criterias, :op
 
-      def initialize
-        # https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language#ArtifactoryQueryLanguage-ComparisonOperators
-        @op = :and # also takes :or
-        @criterias = []
+      def initialize(op, c)
+        # https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language#ArtifactoryQueryLanguage-CompoundingCriteria
+        @op = op
+        @criterias = c
       end
 
       def build
-        ""
+        case @op
+          when :and
+            "{\"@" + @field + ":{\"$eq:\"" + @value +"\"}}"
+          when :or
+            "{\"@" + @field + ":{\"$ne:\"" + @value +"\"}}"
+          else
+            raise "Invalid operator"
+        end
       end
     end
 
@@ -67,8 +74,8 @@ module Artifactory
         @criterias << Criteria.new(f, op, v)
       end
 
-      def with_compound_criteria(c)
-        @criterias << criteria
+      def with_compound_criteria((op, c))
+        @criterias << CompoundCriteria.new(op, c)
       end
 
       def process_criteria(c)
