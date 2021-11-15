@@ -61,9 +61,10 @@ module Artifactory
       #   )
       #
       # @example Search for all artifacts in a specific repos using the builder
-      #   aql_query = AQLBuilder.Artifact.with_repos([repos]).with_properties([environment: dev]).build
+      #   AQL = ItemQueryBuilder.new
+      #   AQL.with_criteria(["@build.name", :eq, "artifactory"])
       #   Artifact.aql_search(
-      #     aql:      aql
+      #     aql:      aql.query
       #   )
       #
       # @param [Hash] options
