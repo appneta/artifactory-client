@@ -20,7 +20,7 @@ module Artifactory
     class Criteria
       attr_accessor :field, :op, :value
 
-      def initialize(field, op, value)
+      def initialize((field, op, value))
         # https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language#ArtifactoryQueryLanguage-SupportedDomains
         @field = field
         # https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language#ArtifactoryQueryLanguage-ComparisonOperators
@@ -29,14 +29,7 @@ module Artifactory
       end
 
       def build
-        case @op
-          when :equals
-            "{\"@" + @field + ":{\"$eq:\"" + @value +"\"}}"
-          when :not_equals
-            "{\"@" + @field + ":{\"$ne:\"" + @value +"\"}}"
-          else
-            raise "Invalid operator"
-        end
+        "\"" + @field + "\":{\"$" + @op.to_s + "\":\"" + @value +"\"}"
       end
     end
 
@@ -44,21 +37,26 @@ module Artifactory
     class CompoundCriteria
       attr_accessor :criterias, :op
 
-      def initialize(op, c)
+      def initialize((op, c))
         # https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language#ArtifactoryQueryLanguage-CompoundingCriteria
         @op = op
-        @criterias = c
+        @criterias = c.map { |crit| process_criteria(crit) }
+        @translated = []
+      end
+
+      def process_criteria(c)
+        if c.length() == 3
+          Criteria.new(c)
+        elsif c.length() == 2
+          CompoundCriteria.new(c)
+        else
+          raise "Invalid input"
+        end
       end
 
       def build
-        case @op
-          when :and
-            "{\"@" + @field + ":{\"$eq:\"" + @value +"\"}}"
-          when :or
-            "{\"@" + @field + ":{\"$ne:\"" + @value +"\"}}"
-          else
-            raise "Invalid operator"
-        end
+        @criterias.each { |c| @translated.push("{" + c.build + "}") }
+        "\"$" + @op.to_s + "\":[" + @translated.join(",") +"]"
       end
     end
 
@@ -67,24 +65,28 @@ module Artifactory
 
       def initialize
         @criterias = []
-        @query = "items.find("
+        @translated = []
+        @query = ""
       end
 
-      def with_criteria(f, op, v)
-        @criterias << Criteria.new(f, op, v)
+      def with_criteria((f, op, v))
+        @criterias << Criteria.new([f, op, v])
       end
 
       def with_compound_criteria((op, c))
-        @criterias << CompoundCriteria.new(op, c)
+        @criterias << CompoundCriteria.new([op, c])
       end
 
       def process_criteria(c)
-        @query += c.build
-        @query += ")"
+        @translated.push(c.build)
       end
 
       def build
+        @query = "items.find({"
         @criterias.each { |c| process_criteria(c) }
+        translated = @translated.join(",")
+        @query << translated
+        @query += "})"
         @query
       end
 
