@@ -84,7 +84,7 @@ module Artifactory
           "Content-Type" => "plain/text",
         }
 
-        client.post("/api/search/aql", params, headers)["results"].map do |artifact|
+        client.post("/api/search/aql", params[:aql], headers)["results"].map do |artifact|
           from_url("/api/storage/" + artifact['repo'] + "/" + artifact['path'] + "/" + artifact['name'], client: client)
         end
       end
