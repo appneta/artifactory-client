@@ -23,6 +23,7 @@ module Artifactory
   autoload :Defaults,     "artifactory/defaults"
   autoload :Error,        "artifactory/errors"
   autoload :Util,         "artifactory/util"
+  autoload :AQL,         "artifactory/aql"
 
   module Collection
     autoload :Artifact, "artifactory/collections/artifact"

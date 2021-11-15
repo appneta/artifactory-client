@@ -53,6 +53,43 @@ module Artifactory
       end
 
       #
+      # Search for an artifact using AQL:
+      #
+      # @example Search for all artifacts in specific repos with string
+      #   Artifact.aql_search(
+      #     aql: "items.find({\"@repo\":{\"$eq\":\"libs-releases-local\"}})"
+      #   )
+      #
+      # @example Search for all artifacts in a specific repos using the builder
+      #   AQL = ItemQueryBuilder.new
+      #   AQL.with_criteria(["@build.name", :eq, "artifactory"])
+      #   Artifact.aql_search(
+      #     aql:      aql.query
+      #   )
+      #
+      # @param [Hash] options
+      #   the list of options to search with
+      # @option options [Artifactory::Client] :client
+      #   the client object to make the request with
+      # @option options [String] :aql
+      #   an AQL object to search with https://www.jfrog.com/confluence/display/JFROG/Artifactory+Query+Language
+      #
+      # @return [Array<Resource::Artifact>]
+      #   a list of artifacts that match the query
+      #
+      def aql_search(options = {})
+        client = extract_client!(options)
+        params = Util.slice(options, :aql)
+        headers ||= {
+          "Content-Type" => "plain/text",
+        }
+
+        client.post("/api/search/aql", params, headers)["results"].map do |artifact|
+          from_url("/api/storage/" + artifact['repo'] + "/" + artifact['path'] + "/" + artifact['name'], client: client)
+        end
+      end
+
+      #
       # Search for an artifact by Maven coordinates: +Group ID+, +Artifact ID+,
       # +Version+ and +Classifier+.
       #

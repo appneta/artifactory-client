@@ -50,6 +50,22 @@ module Artifactory
       it_behaves_like "an artifact search endpoint", :search, name: "artifact.deb"
     end
 
+    describe ".aql_search" do
+      let(:artifacts) do
+        artifacts = described_class.send(:aql_search, aql: "items.find({\"@build.name\":{\"$eq\":\"artifactory\"}})")
+      end
+
+      it "returns a downloadable artifact" do
+        expect(artifacts).to be_a(Array)
+        expect(artifacts.size).to eq(1)
+
+        artifact = artifacts.first
+        expect(artifact).to be_a(described_class)
+        expect(artifact.repo).to eq("libs-release-local")
+        expect(artifact.download_uri).to be_truthy
+      end
+    end
+
     describe ".gavc_search" do
       it_behaves_like "an artifact search endpoint", :gavc_search, {
         group:      "org.acme",
