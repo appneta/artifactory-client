@@ -81,7 +81,7 @@ module Artifactory
         client = extract_client!(options)
         params = Util.slice(options, :aql)
         headers ||= {
-          "Content-Type" => "plain/text",
+          "Content-Type" => "text/plain",
         }
 
         client.post("/api/search/aql", params[:aql], headers)["results"].map do |artifact|
